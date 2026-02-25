@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>LifeLine - Hospital Dashboard</title>
+
+    <!-- Link to CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='hospital-static/hospital-styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- ===== HOSPITAL LOGIN OVERLAY ===== -->
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-card">
+            <div class="login-header">
+                <i class="fas fa-hospital-user fa-3x"></i>
+                <h2>Hospital Login</h2>
+                <p>Access your LifeLine Hospital Dashboard</p>
+            </div>
+
+            <form id="hospitalLoginForm" class="login-form" novalidate>
+                <div class="form-group">
+                    <label for="hospitalUsername">Username</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="hospitalUsername" name="hospitalUsername" autocomplete="username" placeholder="Enter username" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="hospitalPassword">Password</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="hospitalPassword" name="hospitalPassword" autocomplete="current-password" placeholder="Enter password" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn login-btn"><i class="fas fa-sign-in-alt"></i> Login</button>
+                <div id="loginMessage" class="login-message" aria-live="polite"></div>
+
+                <div class="login-footer">
+                    <p><i class="fas fa-shield-alt"></i> Secure Access — Authorized Hospitals Only</p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MAIN DASHBOARD ===== -->
+    <div id="appRoot" class="dashboard hidden">
+        <!-- Sidebar -->
+        <div class="sidebar" role="navigation" aria-label="Main Navigation">
+            <div class="logo" id="sidebarLogo">
+                <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
+                <div class="logo-text">
+                    <div id="hospitalNameSidebar" class="small-subtext">Hospital</div>
+                </div>
+            </div>
+
+            <ul class="nav-links" role="menubar">
+                <li><a href="#" class="active" data-page="dashboard"><i class="fas fa-home"></i> <span>Dashboard</span></a></li>
+                <li><a href="#" data-page="ambulances"><i class="fas fa-ambulance"></i> <span>Ambulances</span></a></li>
+                <li><a href="#" data-page="patients"><i class="fas fa-user-injured"></i> <span>Patients</span></a></li>
+                <li><a href="#" data-page="drivers"><i class="fas fa-user-md"></i> <span>Drivers</span></a></li>
+                <li><a href="#" data-page="analytics"><i class="fas fa-chart-bar"></i> <span>Analytics</span></a></li>
+            </ul>
+
+            <div class="user-profile">
+                <div class="user-avatar" id="hospitalAvatar">HH</div>
+                <div class="user-info">
+                    <h4 id="hospitalNameHeader">Hospital</h4>
+                    <p id="hospitalLocationHeader">Administrator</p>
+                </div>
+            </div>
+
+            <div style="padding: 16px;">
+                <button id="logoutBtn" class="btn logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content" role="main">
+
+            <!-- ===== Dashboard Section ===== -->
+            <div id="dashboardSection" class="page-section">
+                <div class="header">
+                    <div class="page-title">
+                        <h1>Hospital Dashboard</h1>
+                        <p id="dashboardSubtitle">Monitor and manage patients, drivers, and ambulances</p>
+                    </div>
+                </div>
+
+                <!-- ===== Stats Grid ===== -->
+                <div class="stats-grid">
+                    <div class="stat-card" id="cardActivePatients">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="activePatientsCount">0</div>
+                                <div class="stat-label">Active Patients</div>
+                            </div>
+                            <div class="stat-icon"><i class="fas fa-user-injured"></i></div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card" id="cardAvailableDrivers">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="availableDriversCount">0</div>
+                                <div class="stat-label">Available Drivers</div>
+                            </div>
+                            <div class="stat-icon"><i class="fas fa-user-md"></i></div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card" id="cardCompletedToday">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="completedTodayCount">0</div>
+                                <div class="stat-label">Completed Today</div>
+                            </div>
+                            <div class="stat-icon"><i class="fas fa-ambulance"></i></div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card" id="cardEfficiencyScore">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="efficiencyScoreValue">--%</div>
+                                <div class="stat-label">Hospital Efficiency Score</div>
+                            </div>
+                            <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                        </div>
+                    </div>
+                </div> <!-- ✅ properly closed stats-grid -->
+
+                <!-- ===== Content Grid ===== -->
+                <div class="content-grid">
+                    <!-- Left Column -->
+                    <div class="left-column">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Active Emergency Assignments</div>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table id="patientsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Patient</th>
+                                                <th>Condition</th>
+                                                <th>Driver</th>
+                                                <th>ETA</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Populated dynamically -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="right-column">
+                        <div class="card">
+                            <div class="card-header"><div class="card-title">Recent Activity</div></div>
+                            <div class="card-body">
+                                <ul class="activity-list" id="activityList"></ul>
+                            </div>
+                        </div>
+
+                        <div class="card" style="margin-top: 24px;">
+                            <div class="card-header"><div class="card-title">Driver Status</div></div>
+                            <div class="card-body">
+                                <div class="driver-list" id="driverList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- /dashboardSection -->
+
+            <!-- ===== Ambulances Section ===== -->
+            <div id="ambulancesSection" class="page-section hidden">
+                <h2><i class="fas fa-ambulance"></i> Ambulances Overview</h2>
+                <div id="ambulanceDashboard" class="data-container"></div>
+            </div>
+
+            <!-- ===== Patients Section ===== -->
+            <div id="patientsSection" class="page-section hidden">
+                <h2><i class="fas fa-user-injured"></i> Patient Assignments</h2>
+                <div id="patientDashboard" class="data-container"></div>
+            </div>
+
+            <!-- ===== Drivers Section ===== -->
+            <div id="driversSection" class="page-section hidden">
+                <h2><i class="fas fa-user-md"></i> Driver Information</h2>
+                <div id="driverDashboard" class="data-container"></div>
+            </div>
+
+            <!-- ===== Analytics Section ===== -->
+            <div id="analyticsSection" class="page-section hidden">
+                <div class="analytics-container">
+                    <h3><i class="fas fa-chart-bar"></i> Ambulance Performance Analytics</h3>
+                    <div class="analytics-toolbar">
+                        <button id="refreshChartBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    </div>
+                    <canvas id="ambulanceAnalyticsChart"></canvas>
+
+                    <!-- NEW LINE CHART BELOW -->
+                    <div style="margin-top: 40px;">
+                        <h4><i class="fas fa-chart-line"></i> Trips Completed in the Last 7 Days</h4>
+                        <canvas id="weeklyTripsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- /main-content -->
+    </div> <!-- /appRoot -->
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <!-- JS -->
+    <script src="{{ url_for('static', filename='hospital-static/hospital-script.js') }}"></script>
+</body>
+</html>
